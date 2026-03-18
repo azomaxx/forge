@@ -1,0 +1,13 @@
+{
+  "tool_id": "sharprdp",
+  "repo_url": "https://github.com/0xthirteen/SharpRDP",
+  "project_path": "SharpRDP\\SharpRDP.sln",
+  "configuration": "Release",
+  "target_framework": "",
+  "version_strategy": "tag_then_commit",
+  "restore_mode": "auto",
+  "build_mode": "auto",
+  "asset_include": null,
+  "asset_exclude": null
+}
+

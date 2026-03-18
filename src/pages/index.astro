@@ -1,0 +1,445 @@
+---
+import AppLayout from "../layouts/AppLayout.astro";
+import { catalog } from "../lib/forge-data";
+
+export const prerender = false;
+const catalogPreview = catalog
+  .filter((entry) => entry.enabled)
+  .map((entry) => ({
+    id: entry.id,
+    repoUrl: entry.repo_url,
+    projectPath: entry.project_path,
+  }));
+---
+
+<AppLayout title="forge - Build .NET Projects" description="Build .NET security tools with GitHub Actions. Inspect repositories, select refs, and dispatch builds.">
+  <section class="hero">
+    <section class="panel">
+      <p class="kicker">Build</p>
+      <h1>Check a repository, choose a ref, and send one build.</h1>
+      <p>Use this page for single builds. Results and runs stay in the top navigation.</p>
+      <div class="info-banner" style="margin-top: 1rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <span>Builds are cached - check Results first. If release exists, your build will be skipped.</span>
+      </div>
+      <div class="warning-banner" style="margin-top: 0.75rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <span>20 builds per hour per IP. Don't spam.</span>
+      </div>
+      <p class="disclaimer">Use responsibly. The maintainers are not responsible for how you use this.</p>
+    </section>
+    <aside class="panel stats">
+      <div class="stat">
+        <strong>{catalog.filter((entry) => entry.enabled).length}</strong>
+        <span class="muted">tools in catalog</span>
+      </div>
+      <div class="stat">
+        <strong>Open</strong>
+        <span class="muted">Anyone can trigger builds. Use responsibly.</span>
+      </div>
+      <div class="stat">
+        <strong>GitHub</strong>
+        <span class="muted">Tags, branches, commits, and profiles.</span>
+      </div>
+    </aside>
+  </section>
+
+  <section class="grid">
+    <section id="build-form" class="panel">
+      <div class="toolbar">
+        <div>
+          <p class="kicker">Build one</p>
+          <h2 class="section-title">Inspect first, then build.</h2>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="repo-url">Repository URL</label>
+          <input id="repo-url" placeholder="https://github.com/FuzzySecurity/StandIn" />
+          <small>Any public GitHub repository URL. Catalog membership is optional.</small>
+          <div id="inspect-status-container" style="margin-top: 0.5rem; min-height: 20px;">
+            <span id="inspect-status" class="muted"></span>
+          </div>
+        </div>
+
+        <button id="inspect-button" type="button" class="full-width secondary">
+          <span class="btn-content">Inspect repository</span>
+        </button>
+
+        <div id="build-panel" style="display:none">
+          <div class="subpanel">
+            <div class="note">Inspection checks GitHub live and loads any matching Forge profile.</div>
+            <div class="field">
+              <label for="source-ref">Source ref to build</label>
+              <input id="source-ref" placeholder="Exact tag, branch, or commit" />
+              <small>If there is no tag you can pick a branch or a recent commit.</small>
+            </div>
+
+            <div class="field">
+              <label>Detected refs</label>
+              <div id="ref-pills" class="pill-list"></div>
+            </div>
+          </div>
+
+          <div id="toggle-row-container" class="toggle-row" style="display:none">
+            <label class="toggle-card" for="advanced-toggle">
+              <input id="advanced-toggle" type="checkbox" />
+              <span>
+                <strong>Advanced settings</strong>
+                <small>Project path, framework, asset filters, and mode overrides.</small>
+              </span>
+            </label>
+            <label class="toggle-card" for="force-rebuild">
+              <input id="force-rebuild" type="checkbox" />
+              <span>
+                <strong>Skip cache</strong>
+                <small>Forces rebuild even if release exists. Wastes resources.</small>
+              </span>
+            </label>
+          </div>
+
+          <div id="advanced-panel" class="advanced subpanel">
+            <div class="field">
+              <label for="project-path">Solution or project path</label>
+              <input id="project-path" placeholder="SharpRDP/SharpRDP.sln" />
+            </div>
+
+            <div class="field">
+              <label for="configuration">Build configuration</label>
+              <input id="configuration" placeholder="Release" />
+            </div>
+
+            <div class="field">
+              <label for="framework">Target framework</label>
+              <input id="framework" placeholder="net462" />
+            </div>
+
+            <div class="field">
+              <label for="version-label">Custom release label</label>
+              <input id="version-label" placeholder="Leave empty unless you need a custom label" />
+            </div>
+
+            <div class="field">
+              <label for="asset-include">Asset include filter</label>
+              <input id="asset-include" placeholder="exe,dll" />
+            </div>
+
+            <div class="field">
+              <label for="asset-exclude">Asset exclude filter</label>
+              <input id="asset-exclude" placeholder="resources.dll" />
+            </div>
+          </div>
+
+          <div class="inline-actions">
+            <button id="build-button" type="button" class="btn-start-build">
+              Start build
+            </button>
+            <button id="suggest-button" class="secondary" type="button">Prepare catalog suggestion</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="toolbar">
+        <div>
+          <p class="kicker">Inspector</p>
+          <h2 class="section-title">Resolved details</h2>
+        </div>
+      </div>
+      <div id="inspector" class="empty">Inspect a repository to load refs, defaults, and matching Forge profile data.</div>
+      <div id="suggestion" class="log-card" style="display:none"></div>
+    </aside>
+  </section>
+
+  <section class="panel" style="margin-top: 1.2rem;">
+    <div class="toolbar">
+      <div>
+        <p class="kicker">Catalog</p>
+        <h2 class="section-title">Available tools</h2>
+      </div>
+      <div class="toolbar-right">
+        <input id="catalog-search" placeholder="Search catalog..." />
+        <span class="muted">{catalogPreview.length} visible</span>
+      </div>
+    </div>
+    <div id="catalog-grid" class="catalog-grid">
+      {catalogPreview.map((entry) => (
+        <article class="catalog-card" data-search-text={`${entry.id} ${entry.repoUrl}`.toLowerCase()}>
+          <div class="catalog-card-header">
+            <strong>{entry.id}</strong>
+            <span class="catalog-repo">{entry.repoUrl.replace('https://github.com/', '')}</span>
+          </div>
+          <button
+            class="secondary catalog-btn"
+            type="button"
+            data-repo-url={entry.repoUrl}
+            data-project-path={entry.projectPath}
+          >
+            Use this repo
+          </button>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <script>
+    const state = {
+      repoUrl: "",
+      toolId: "",
+      refs: [],
+      profile: null,
+    };
+
+    const repoUrlInput = document.querySelector("#repo-url") as HTMLInputElement;
+    const inspectButton = document.querySelector("#inspect-button") as HTMLButtonElement;
+    const inspectStatus = document.querySelector("#inspect-status") as HTMLSpanElement;
+    const buildPanel = document.querySelector("#build-panel") as HTMLElement;
+    const refPills = document.querySelector("#ref-pills") as HTMLElement;
+    const inspector = document.querySelector("#inspector") as HTMLElement;
+    const suggestion = document.querySelector("#suggestion") as HTMLElement;
+    const advancedToggle = document.querySelector("#advanced-toggle") as HTMLInputElement;
+    const advancedPanel = document.querySelector("#advanced-panel") as HTMLElement;
+
+    function setButtonLoading(button: HTMLButtonElement, loading: boolean, originalText: string) {
+      if (loading) {
+        button.disabled = true;
+        button.innerHTML = '<span class="loading-spinner"></span> ' + originalText;
+      } else {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    }
+
+    advancedToggle?.addEventListener("change", () => {
+      advancedPanel?.classList.toggle("is-open", advancedToggle.checked);
+    });
+
+    function fillField(id: string, value: string) {
+      const element = document.querySelector(`#${id}`) as HTMLInputElement;
+      if (element && typeof value === "string") element.value = value;
+    }
+
+    function renderInspector(data: { tool_id: string; repo_url: string; default_branch: string; refs?: Array<{ name: string; kind: string }>; profile: Record<string, unknown> | null; catalog_match: { tool_id: string; enabled: boolean } | null }) {
+      const profile = data.profile;
+      const catalog = data.catalog_match;
+      inspector.innerHTML = `
+        <div class="log-card">
+          <div class="split">
+            <div>
+              <strong>${data.tool_id}</strong>
+              <div class="muted">${data.repo_url}</div>
+            </div>
+            <span class="status">${catalog ? "cataloged" : "ad hoc"}</span>
+          </div>
+          <div class="detail-list">
+            <div><span class="muted">Default branch</span><strong>${data.default_branch}</strong></div>
+            <div><span class="muted">Known profile</span><strong>${profile ? "loaded" : "none"}</strong></div>
+            <div><span class="muted">Refs found</span><strong>${data.refs?.length ?? 0}</strong></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderRefs(refs: Array<{ name: string; kind: string }>) {
+      refPills.innerHTML = "";
+      refs.forEach((ref) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "pill";
+        button.textContent = `${ref.name} · ${ref.kind}`;
+        button.addEventListener("click", () => {
+          (document.querySelector("#source-ref") as HTMLInputElement).value = ref.name;
+        });
+        refPills.appendChild(button);
+      });
+    }
+
+    inspectButton?.addEventListener("click", async () => {
+      if (!repoUrlInput.value.trim()) {
+        inspectStatus.textContent = "Enter a repository URL first";
+        inspectStatus.className = "message-error";
+        return;
+      }
+      
+      const originalText = "Inspect repository";
+      setButtonLoading(inspectButton, true, originalText);
+      
+      inspectStatus.textContent = "Inspecting…";
+      inspectStatus.className = "muted";
+      suggestion.style.display = "none";
+      
+      try {
+        const response = await fetch("/api/repo/inspect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ repo_url: repoUrlInput.value }),
+        });
+
+        if (!response.ok) {
+          inspectStatus.textContent = "Repository inspection failed";
+          inspectStatus.className = "message-error";
+          return;
+        }
+
+        const data = await response.json();
+        state.repoUrl = data.repo_url;
+        state.toolId = data.tool_id;
+        state.refs = data.refs;
+        state.profile = data.profile;
+
+        buildPanel.style.display = "block";
+        const toggleRowContainer = document.querySelector("#toggle-row-container") as HTMLElement;
+        if (toggleRowContainer) {
+          toggleRowContainer.style.display = "grid";
+        }
+        inspectStatus.textContent = "Repository ready";
+        inspectStatus.className = "muted";
+        renderInspector(data);
+        renderRefs(data.refs);
+
+        fillField("project-path", data.profile?.project_path ?? "");
+        fillField("configuration", data.profile?.configuration ?? "Release");
+        fillField("framework", data.profile?.target_framework ?? "");
+        fillField("asset-include", (data.profile?.asset_include ?? []).join(","));
+        fillField("asset-exclude", (data.profile?.asset_exclude ?? []).join(","));
+        
+        const shouldOpenAdvanced = Boolean(
+          data.profile?.project_path ||
+          data.profile?.target_framework ||
+          (data.profile?.asset_include ?? []).length ||
+          (data.profile?.asset_exclude ?? []).length ||
+          (data.profile?.restore_mode && data.profile.restore_mode !== "auto") ||
+          (data.profile?.build_mode && data.profile.build_mode !== "auto"),
+        );
+        
+        advancedToggle.checked = false;
+        advancedPanel?.classList.remove("is-open");
+        
+        if (shouldOpenAdvanced) {
+          const advancedLabel = document.querySelector('label[for="advanced-toggle"] strong');
+          if (advancedLabel) {
+            advancedLabel.innerHTML = 'Advanced settings <span style="color: var(--accent-2); font-size: 0.8em;">● profile loaded</span>';
+          }
+        }
+      } catch (error) {
+        inspectStatus.textContent = "Repository inspection failed";
+        inspectStatus.className = "message-error";
+      } finally {
+        setButtonLoading(inspectButton, false, originalText);
+      }
+    });
+
+    document.querySelector("#suggest-button")?.addEventListener("click", async () => {
+      const response = await fetch("/api/catalog/suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ repo_url: state.repoUrl || repoUrlInput.value }),
+      });
+      const data = await response.json();
+      suggestion.style.display = "block";
+      suggestion.innerHTML = `<strong>Catalog suggestion</strong><pre>${data.suggestion}</pre><p style="margin-top: 0.75rem; font-size: 0.85rem;">To add to catalog: DM <strong>Shadow21A</strong> on Discord or open a PR.</p>`;
+    });
+
+    const buildButton = document.querySelector("#build-button") as HTMLButtonElement;
+    const buildOriginalText = "Start build";
+    
+    buildButton?.addEventListener("click", async () => {
+      setButtonLoading(buildButton, true, buildOriginalText);
+      
+      const payload = {
+        repo_url: state.repoUrl || repoUrlInput.value,
+        mode: advancedToggle.checked ? "advanced" : "simple",
+        git_ref: (document.querySelector("#source-ref") as HTMLInputElement).value.trim(),
+        project_path: (document.querySelector("#project-path") as HTMLInputElement).value.trim(),
+        configuration: (document.querySelector("#configuration") as HTMLInputElement).value.trim(),
+        target_framework: (document.querySelector("#framework") as HTMLInputElement).value.trim(),
+        version_override: (document.querySelector("#version-label") as HTMLInputElement).value.trim(),
+        asset_include: (document.querySelector("#asset-include") as HTMLInputElement).value.trim(),
+        asset_exclude: (document.querySelector("#asset-exclude") as HTMLInputElement).value.trim(),
+        force_rebuild: (document.querySelector("#force-rebuild") as HTMLInputElement).checked,
+      };
+
+      try {
+        const response = await fetch("/api/build", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({ error: "Build dispatch failed" }));
+          inspectStatus.textContent = error.error ?? "Build dispatch failed";
+          inspectStatus.className = "message-error";
+          return;
+        }
+
+        const data = await response.json();
+        if (data.run_id) {
+          const runs = JSON.parse(localStorage.getItem("forge_recent_runs") || "[]");
+          const nextRuns = [data.run_id, ...runs.filter((runId: string) => runId !== data.run_id)].slice(0, 8);
+          localStorage.setItem("forge_recent_runs", JSON.stringify(nextRuns));
+          window.location.href = `/runs/${data.run_id}`;
+          return;
+        }
+
+        inspectStatus.textContent = "Build dispatched. Run lookup is still catching up.";
+        inspectStatus.className = "muted";
+      } catch (error) {
+        inspectStatus.textContent = "Build dispatch failed";
+        inspectStatus.className = "message-error";
+      } finally {
+        setButtonLoading(buildButton, false, buildOriginalText);
+      }
+    });
+
+    document.querySelectorAll("[data-repo-url]").forEach((button) => {
+      button.addEventListener("click", () => {
+        repoUrlInput.value = (button as HTMLButtonElement).dataset.repoUrl ?? "";
+        (document.querySelector("#project-path") as HTMLInputElement).value = (button as HTMLButtonElement).dataset.projectPath ?? "";
+        repoUrlInput.focus();
+        inspectButton.click();
+      });
+    });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const repoParam = urlParams.get('repo');
+    if (repoParam) {
+      repoUrlInput.value = repoParam;
+      repoUrlInput.focus();
+    }
+
+    const catalogSearch = document.querySelector("#catalog-search") as HTMLInputElement;
+    const catalogGrid = document.querySelector("#catalog-grid") as HTMLElement;
+    const catalogCards = catalogGrid?.querySelectorAll(".catalog-card");
+    
+    catalogSearch?.addEventListener("input", (e) => {
+      const searchTerm = (e.target as HTMLInputElement).value.toLowerCase();
+      let visibleCount = 0;
+      
+      catalogCards?.forEach((card) => {
+        const c = card as HTMLElement;
+        const searchText = c.dataset.searchText || "";
+        if (searchText.includes(searchTerm)) {
+          c.style.display = "grid";
+          visibleCount++;
+        } else {
+          c.style.display = "none";
+        }
+      });
+      
+      const countElement = document.querySelector(".toolbar-right .muted");
+      if (countElement) {
+        countElement.textContent = `${visibleCount} visible`;
+      }
+    });
+  </script>
+</AppLayout>

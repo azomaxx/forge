@@ -1,0 +1,118 @@
+---
+import AppLayout from "../layouts/AppLayout.astro";
+import { catalog } from "../lib/forge-data";
+
+export const prerender = false;
+const knownTools = catalog.filter((entry) => entry.enabled);
+---
+
+<AppLayout title="forge - Browse Results" description="Browse completed builds and download artifacts from GitHub Releases.">
+  <section class="hero">
+    <section class="panel">
+      <p class="kicker">Results</p>
+      <h1>Browse completed builds.</h1>
+      <p>Load all Forge releases or narrow the list to one repository.</p>
+    </section>
+    <aside class="panel">
+      <div class="field">
+        <label for="results-repo">Repository URL</label>
+        <input id="results-repo" placeholder="https://github.com/FuzzySecurity/StandIn" />
+      </div>
+      <div class="inline-actions" style="margin-top: 1rem;">
+        <button id="results-button" type="button">Load releases</button>
+        <button id="results-all" class="secondary" type="button">Load all</button>
+      </div>
+    </aside>
+  </section>
+
+  <section class="panel">
+    <div class="toolbar">
+      <h2 class="section-title">Releases</h2>
+      <div class="pill-list catalog-pills">
+        {knownTools.map((tool) => (
+          <button class="pill" type="button" data-result-repo={tool.repo_url}>{tool.id}</button>
+        ))}
+      </div>
+    </div>
+    <div class="note" style="margin-bottom: 1rem;">Showing 20 most recent releases. Use search to find specific repositories.</div>
+    <div id="results-list" class="empty">No releases loaded yet.</div>
+  </section>
+
+  <script>
+    async function loadResults(repoUrl = "") {
+      const target = document.querySelector("#results-list") as HTMLElement;
+      target.innerHTML = "<div class='empty'>Loading releases…</div>";
+      const query = repoUrl ? `?repo_url=${encodeURIComponent(repoUrl)}` : "";
+      const response = await fetch(`/api/releases${query}`);
+      if (!response.ok) {
+        target.innerHTML = "<div class='empty'>Unable to load releases.</div>";
+        return;
+      }
+      const data = await response.json();
+      if (!data.releases?.length) {
+        if (repoUrl) {
+          target.innerHTML = `
+            <div class='empty'>
+              <p>No releases found for <strong>${repoUrl}</strong>.</p>
+              <p style="margin-top: 0.5rem;">Want to build this repository? <a href="/?repo=${encodeURIComponent(repoUrl)}" class="button secondary" style="margin-top: 0.5rem; display: inline-flex;">Go build it</a></p>
+            </div>
+          `;
+        } else {
+          target.innerHTML = "<div class='empty'>No matching releases found.</div>";
+        }
+        return;
+      }
+      target.innerHTML = data.releases
+        .map((release: { name: string; tag: string; published_at: string; assets: Array<{ name: string; size: number }> }) => `
+          <article class="result-card">
+            <div class="split">
+              <strong>${release.name ?? release.tag}</strong>
+              <span class="status success">${release.assets.length} assets</span>
+            </div>
+            <div class="pill-list" style="margin-top: 0.75rem;">
+              ${release.assets
+                .map((asset: { name: string; size: number }) => {
+                  const sizeInBytes = asset.size;
+                  let sizeDisplay: string;
+                  if (sizeInBytes < 1024 * 1024) {
+                    sizeDisplay = `${(sizeInBytes / 1024).toFixed(1)} KB`;
+                  } else {
+                    sizeDisplay = `${(sizeInBytes / 1024 / 1024).toFixed(1)} MB`;
+                  }
+                  
+                  return `
+                    <a class="button secondary asset-button" href="/api/releases/asset?tag=${encodeURIComponent(release.tag)}&name=${encodeURIComponent(asset.name)}">
+                      <span class="asset-name">${asset.name}</span>
+                      <span class="asset-size">${sizeDisplay}</span>
+                    </a>
+                  `;
+                })
+                .join("")}
+            </div>
+          </article>
+        `)
+        .join("");
+    }
+
+    document.querySelectorAll("[data-result-repo]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const input = document.querySelector("#results-repo") as HTMLInputElement;
+        const btn = button as HTMLButtonElement;
+        input.value = btn.dataset.resultRepo ?? "";
+        loadResults(btn.dataset.resultRepo ?? "");
+      });
+    });
+
+    document.querySelector("#results-button")?.addEventListener("click", async () => {
+      const input = document.querySelector("#results-repo") as HTMLInputElement;
+      loadResults(input.value.trim());
+    });
+
+    document.querySelector("#results-all")?.addEventListener("click", async () => {
+      (document.querySelector("#results-repo") as HTMLInputElement).value = "";
+      loadResults("");
+    });
+
+    loadResults("");
+  </script>
+</AppLayout>

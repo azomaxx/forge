@@ -1,0 +1,56 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+
+export const prerender = false;
+---
+
+<AppLayout title="forge - Build Runs" description="Find and track your build runs. Jump back into recent builds from this browser.">
+  <section class="hero">
+    <section class="panel">
+      <p class="kicker">Runs</p>
+      <h1>Find a build again.</h1>
+      <p>Paste a run id or jump back into one of your recent runs from this browser.</p>
+    </section>
+    <aside class="panel">
+      <div class="field">
+        <label for="run-id">Run id</label>
+        <input id="run-id" placeholder="123456789" />
+      </div>
+      <div class="inline-actions" style="margin-top: 1rem;">
+        <button id="open-run" type="button">Open run</button>
+      </div>
+    </aside>
+  </section>
+
+  <section class="panel">
+    <div class="toolbar">
+      <h2 class="section-title">Recent runs</h2>
+      <span class="muted">Stored in this browser after a successful dispatch.</span>
+    </div>
+    <div id="recent-runs" class="empty">No recent runs saved yet.</div>
+  </section>
+
+  <script>
+    const recentContainer = document.querySelector("#recent-runs") as HTMLElement;
+    const recentRuns: string[] = JSON.parse(localStorage.getItem("forge_recent_runs") || "[]");
+
+    if (recentRuns.length && recentContainer) {
+      recentContainer.innerHTML = recentRuns
+        .map((runId: string) => `
+          <article class="result-card">
+            <div class="split">
+              <strong>Run #${runId}</strong>
+              <a class="button secondary" href="/runs/${runId}">Open</a>
+            </div>
+          </article>
+        `)
+        .join("");
+    }
+
+    document.querySelector("#open-run")?.addEventListener("click", () => {
+      const input = document.querySelector("#run-id") as HTMLInputElement;
+      const runId = input.value.trim();
+      if (runId) window.location.href = `/runs/${runId}`;
+    });
+  </script>
+</AppLayout>

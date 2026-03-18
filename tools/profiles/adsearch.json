@@ -1,0 +1,13 @@
+{
+  "tool_id": "adsearch",
+  "repo_url": "https://github.com/tomcarver16/ADSearch",
+  "project_path": "ADSearch.sln",
+  "configuration": "Release",
+  "target_framework": "",
+  "version_strategy": "tag_then_commit",
+  "restore_mode": "legacy_nuget_strict",
+  "build_mode": "solution_default_output",
+  "asset_include": null,
+  "asset_exclude": null
+}
+

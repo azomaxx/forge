@@ -1,0 +1,53 @@
+name: Forge - Build All Latest
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: Skip cache (slow)
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.catalog.outputs.matrix }}
+    steps:
+      - name: Checkout workflow repo
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      - name: Load enabled catalog entries
+        id: catalog
+        run: python scripts/catalog_tool.py list-enabled
+
+  build:
+    needs: prepare
+    if: ${{ fromJson(needs.prepare.outputs.matrix).include[0] != null }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    uses: ./.github/workflows/forge-build.yml
+    with:
+      mode: simple
+      tool_id: ${{ matrix.tool_id }}
+      repo_url: ${{ matrix.repo_url }}
+      git_ref: ${{ matrix.git_ref }}
+      project_path: ${{ matrix.project_path }}
+      configuration: ${{ matrix.configuration }}
+      target_framework: ${{ matrix.target_framework }}
+      asset_include: ${{ matrix.asset_include }}
+      asset_exclude: ${{ matrix.asset_exclude }}
+      force_rebuild: ${{ inputs.force_rebuild }}

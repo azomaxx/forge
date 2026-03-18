@@ -1,0 +1,121 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+
+export const prerender = false;
+const { id } = Astro.params;
+---
+
+<AppLayout title={`forge - Run #${id}`} description={`Track build run #${id} status and progress.`}>
+  <section class="hero">
+    <section class="panel">
+      <p class="kicker">Run status</p>
+      <h1>Track one build.</h1>
+      <p>Preflight, cache decision, build status, and step progress are shown below.</p>
+      <div class="inline-actions">
+        <a class="button secondary" href="/runs">Back to runs</a>
+        <a class="button ghost" href="/results">Browse results</a>
+      </div>
+    </section>
+    <aside class="panel">
+      <div class="stat">
+        <strong>Run #{id}</strong>
+        <span class="muted">The page polls GitHub Actions until the run finishes.</span>
+      </div>
+    </aside>
+  </section>
+
+  <section class="panel">
+    <div class="toolbar">
+      <h2 class="section-title">Status</h2>
+      <span class="muted" id="auto-refresh-note">Auto-refreshes while the run is active.</span>
+    </div>
+    <div id="run-status" class="empty">Loading run data…</div>
+  </section>
+
+  <script define:vars={{ id }}>
+    async function loadRun() {
+      const target = document.querySelector("#run-status");
+      const refreshNote = document.querySelector("#auto-refresh-note");
+      try {
+        const response = await fetch(`/api/runs/${id}`);
+        if (!response.ok) {
+          target.innerHTML = "<div class='empty'>Unable to load workflow run.</div>";
+          return;
+        }
+        const data = await response.json();
+        
+        if (data.error) {
+          target.innerHTML = "<div class='empty'>Error: " + data.error + "</div>";
+          return;
+        }
+        
+        const jobs = data.jobs || [];
+        
+        function getStatusClass(status, conclusion) {
+          if (conclusion === "failure") return "status fail";
+          if (conclusion === "success") return "status success";
+          if (status === "in_progress" || status === "queued") return "status pending";
+          return "status";
+        }
+        
+        const statusClass = getStatusClass(data.status, data.conclusion);
+        
+        // If only preflight job exists and status is completed, it was skipped (cache hit)
+        const wasSkipped = jobs.length === 1 && jobs[0].name && jobs[0].name.toLowerCase().includes("preflight") && data.status === "completed";
+        
+        let statusMessage = data.conclusion || data.status;
+        if (wasSkipped) {
+          statusMessage = "skipped (cache hit)";
+        } else if (data.conclusion === "success" && jobs.length > 1) {
+          // Check if build job was skipped even when there was a build job
+          const buildJob = jobs.find((j) => j.name && j.name.toLowerCase().includes("build"));
+          if (buildJob && buildJob.conclusion === "skipped") {
+            statusMessage = "skipped (cache hit)";
+          }
+        }
+        
+        const skippedNote = wasSkipped ? "<div class='info-banner' style='margin-bottom: 1rem; margin-top: 0.5rem;'><strong>Build was skipped</strong> - a release already exists for this ref. <a href='/results' style='color: var(--accent-2);'>Check Results</a> to download.</div>" : "";
+        const skippedClass = wasSkipped ? "status skipped" : statusClass;
+        
+        if (refreshNote) {
+          refreshNote.textContent = wasSkipped ? "No build needed." : "Auto-refreshes while the run is active.";
+        }
+        
+        let html = "<div class='log-card'><div class='split'><div><strong>" + (data.name || "Forge build") + "</strong>";
+        html += "<div class='muted'>";
+        if (data.html_url) {
+          html += "<a href='" + data.html_url + "' target='_blank' rel='noreferrer'>Open in GitHub</a> | ";
+        }
+        html += "<a href='/results'>Browse Results</a></div></div>";
+        html += "<span class='" + skippedClass + "'>" + statusMessage + "</span></div>" + skippedNote;
+        html += "<div class='detail-list'><div><span class='muted'>Created</span><strong>" + (data.created_at || "unknown") + "</strong></div>";
+        html += "<div><span class='muted'>Updated</span><strong>" + (data.updated_at || "unknown") + "</strong></div>";
+        html += "<div><span class='muted'>Jobs</span><strong>" + jobs.length + "</strong></div></div></div>";
+        
+        jobs.forEach(function(job) {
+          const jobStatusClass = getStatusClass(job.status, job.conclusion);
+          html += "<article class='log-card " + jobStatusClass + "-border " + jobStatusClass + "-bg'>";
+          html += "<div class='split'><strong>" + (job.name || "Unknown job") + "</strong></div>";
+          html += "<div class='pill-list'>";
+          if (job.steps) {
+            job.steps.forEach(function(step) {
+              const stepStatusClass = getStatusClass(step.status, step.conclusion);
+              html += "<span class='pill'>" + (step.name || "Step") + ": <span class='" + stepStatusClass + "' style='font-size: 0.9em;'>" + (step.conclusion || step.status) + "</span></span>";
+            });
+          }
+          html += "</div></article>";
+        });
+        
+        target.innerHTML = html;
+
+        if (data.status !== "completed") {
+          setTimeout(loadRun, 4000);
+        }
+      } catch (err) {
+        target.innerHTML = "<div class='empty'>Error loading run data.</div>";
+      }
+    }
+
+    loadRun();
+  </script>
+</AppLayout>

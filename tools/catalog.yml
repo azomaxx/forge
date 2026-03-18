@@ -1,0 +1,157 @@
+tools:
+  - id: certify
+    repo_url: https://github.com/GhostPack/Certify
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: rubeus
+    repo_url: https://github.com/GhostPack/Rubeus
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: seatbelt
+    repo_url: https://github.com/GhostPack/Seatbelt
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: sharpup
+    repo_url: https://github.com/GhostPack/SharpUp
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: sharpdpapi
+    repo_url: https://github.com/GhostPack/SharpDPAPI
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: sharpwmi
+    repo_url: https://github.com/GhostPack/SharpWMI
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: safetykatz
+    repo_url: https://github.com/GhostPack/SafetyKatz
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: lockless
+    repo_url: https://github.com/GhostPack/LockLess
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: sharphound
+    repo_url: https://github.com/SpecterOps/SharpHound
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: sharpview
+    repo_url: https://github.com/tevora-threat/SharpView
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: sharpsuccessor
+    repo_url: https://github.com/logangoins/SharpSuccessor
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: group3r
+    repo_url: https://github.com/Group3r/Group3r
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: adsearch
+    repo_url: https://github.com/tomcarver16/ADSearch
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: sharpspray
+    repo_url: https://github.com/iomoath/SharpSpray
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: inveigh
+    repo_url: https://github.com/Kevin-Robertson/Inveigh
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: sharprdp
+    repo_url: https://github.com/0xthirteen/SharpRDP
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: sharpexec
+    repo_url: https://github.com/anthemtotheego/SharpExec
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: schedulerunner
+    repo_url: https://github.com/netero1010/ScheduleRunner
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: winpspy
+    repo_url: https://github.com/xct/winpspy
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: sweetpotato
+    repo_url: https://github.com/CCob/SweetPotato
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: sigmapotato
+    repo_url: https://github.com/tylerdotrar/SigmaPotato
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: godpotato
+    repo_url: https://github.com/BeichenDream/GodPotato
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: threatcheck
+    repo_url: https://github.com/rasta-mouse/ThreatCheck
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: sharpkatz
+    repo_url: https://github.com/b4rtik/SharpKatz
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: sharpchromium
+    repo_url: https://github.com/djhohnstein/SharpChromium
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
+
+  - id: snaffler
+    repo_url: https://github.com/SnaffCon/Snaffler
+    enabled: true
+    project_path: Snaffler.sln
+    default_configuration: Release
+    version_strategy: tag_then_commit

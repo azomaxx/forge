@@ -1,0 +1,13 @@
+{
+  "tool_id": "threatcheck",
+  "repo_url": "https://github.com/rasta-mouse/ThreatCheck",
+  "project_path": "ThreatCheck.sln",
+  "configuration": "Release",
+  "target_framework": "",
+  "version_strategy": "tag_then_commit",
+  "restore_mode": "auto",
+  "build_mode": "auto",
+  "asset_include": null,
+  "asset_exclude": null
+}
+

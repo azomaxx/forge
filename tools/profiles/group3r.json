@@ -1,0 +1,13 @@
+{
+  "tool_id": "group3r",
+  "repo_url": "https://github.com/Group3r/Group3r",
+  "project_path": "Group3r.sln",
+  "configuration": "Release",
+  "target_framework": "",
+  "version_strategy": "tag_then_commit",
+  "restore_mode": "legacy_nuget_strict",
+  "build_mode": "solution_default_output",
+  "asset_include": null,
+  "asset_exclude": null
+}
+
