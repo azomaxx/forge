@@ -155,6 +155,7 @@ tools:
     project_path: Snaffler.sln
     default_configuration: Release
     version_strategy: tag_then_commit
+    
   - id: whisker
     repo_url: https://github.com/eladshamir/Whisker
     enabled: true
