@@ -161,4 +161,9 @@ tools:
     enabled: true
     default_configuration: Release
     version_strategy: tag_then_commit
+  - id: peass-ng
+    repo_url: https://github.com/peass-ng/PEASS-ng
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
 
