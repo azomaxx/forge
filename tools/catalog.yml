@@ -181,4 +181,9 @@ tools:
     enabled: true
     default_configuration: Release
     version_strategy: tag_then_commit
+  - id: sharpsql
+    repo_url: https://github.com/mlcsec/SharpSQL
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
 
