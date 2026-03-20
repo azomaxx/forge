@@ -201,4 +201,9 @@ tools:
     enabled: true
     default_configuration: Release
     version_strategy: tag_then_commit
+  - id: sharpgpoabuse
+    repo_url: https://github.com/FSecureLABS/SharpGPOAbuse
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
 
