@@ -236,4 +236,9 @@ tools:
     enabled: true
     default_configuration: Release
     version_strategy: tag_then_commit
+  - id: sharpefspotato
+    repo_url: https://github.com/bugch3ck/SharpEfsPotato
+    enabled: true
+    default_configuration: Release
+    version_strategy: tag_then_commit
 
